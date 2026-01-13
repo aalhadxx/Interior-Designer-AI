@@ -45,7 +45,7 @@ export const cleanRoomImage = async (imageBase64: string): Promise<string> => {
             },
           },
           {
-            text: "Act as a professional home organizer and interior photographer. Your task is to 'digitally declutter' this room. 1) Remove all loose items from floors, tables, and countertops (papers, clothes, toys, trash). 2) Straighten rugs, pillows, and curtains. 3) Keep the architectural structure, lighting, flooring, and main furniture pieces EXACTLY as they are. Do not change the wall color or furniture style. The goal is to make the room look like it was just tidied up for a real estate listing.",
+            text: "Act as a professional home organizer and interior photographer. Your task is to 'digitally declutter' this room. 1) Remove all loose items from floors, tables, and countertops (papers, clothes, toys, trash). 2) Straighten rugs, pillows, and curtains. 3) Keep the architectural structure, lighting, flooring, and main furniture pieces EXACTLY as they are. Do not change the wall color or furniture style. The goal is to make the room look like it was just tidied up for a real estate listing. Note: If the image is wide-angle, preserve the perspective.",
           },
         ],
       },
@@ -78,9 +78,10 @@ export const analyzeRoomDesign = async (
 
     RULES:
     1. ANALYZE the image accurately. Do not hallucinate furniture or windows that are not there.
-    2. Suggest improvements based ONLY on the user's selected category.
-    3. For every piece of advice, you MUST cite a specific principle or concept from one of the books above.
-    4. Be concise and actionable.
+    2. Note: The image may be taken with a wide-angle lens. Account for potential perspective distortion when analyzing layout and flow.
+    3. Suggest improvements based ONLY on the user's selected category.
+    4. For every piece of advice, you MUST cite a specific principle or concept from one of the books above.
+    5. Be concise and actionable.
   `;
 
   const prompt = `

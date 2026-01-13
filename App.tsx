@@ -12,23 +12,53 @@ function App() {
   const [advice, setAdvice] = useState<DesignAdvice[]>([]);
   const [visualizations, setVisualizations] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Reset derived state when new image is uploaded
+  // Helper to process file
+  const processFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setOriginalImage(event.target?.result as string);
+      setCleanImage(null);
+      setIsCleanMode(false);
+      setAdvice([]);
+      setVisualizations([]);
+      setError(null);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setOriginalImage(event.target?.result as string);
-        setCleanImage(null);
-        setIsCleanMode(false);
-        setAdvice([]);
-        setVisualizations([]);
-        setError(null);
-      };
-      reader.readAsDataURL(file);
+      processFile(e.target.files[0]);
+    }
+  };
+
+  // Drag and Drop Handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    // Only set to false if we are actually leaving the drop zone container
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+        setIsDragging(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith('image/')) {
+        processFile(file);
+      }
     }
   };
 
@@ -110,7 +140,18 @@ function App() {
         
         {!originalImage ? (
           /* Empty State / Landing */
-          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8 animate-fade-in-up">
+          <div 
+            className={`relative flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8 animate-fade-in-up rounded-3xl p-8 transition-all duration-300 border-2 border-dashed ${isDragging ? 'border-stone-800 bg-stone-200/50 scale-[1.02]' : 'border-transparent hover:border-stone-200'}`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            {isDragging && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-stone-900/5 backdrop-blur-sm rounded-3xl pointer-events-none">
+                    <p className="text-3xl font-serif font-bold text-stone-900 bg-white/80 px-8 py-4 rounded-full shadow-2xl">Drop image here</p>
+                </div>
+            )}
+
             <h1 className="font-serif text-5xl md:text-7xl text-stone-900 leading-[1.1]">
               Redesign your space<br />with literary wisdom.
             </h1>
@@ -118,20 +159,21 @@ function App() {
               Upload a wide-angle photo of your room. Lumina analyzes it against the top 10 interior design books to provide bespoke lighting, layout, and decor advice.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto items-center justify-center relative z-10">
+               {/* Option 1: Upload from Gallery/File */}
                <button 
                 onClick={triggerUpload}
-                className="group relative px-8 py-4 bg-stone-900 text-white font-medium text-lg rounded-full overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+                className="group relative px-8 py-4 bg-stone-900 text-white font-medium text-lg rounded-full overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 min-w-[200px]"
                >
-                 <span className="relative z-10 flex items-center gap-3">
+                 <span className="relative z-10 flex items-center justify-center gap-3">
                    <UploadIcon />
-                   Upload Photo
+                   Upload Image
                  </span>
                  <div className="absolute inset-0 bg-stone-800 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></div>
                </button>
 
-               {/* Mobile Camera Trigger */}
-               <div className="sm:hidden">
+               {/* Option 2: Direct Camera Access */}
+               <div className="relative group min-w-[200px]">
                  <input 
                     type="file" 
                     accept="image/*" 
@@ -140,10 +182,13 @@ function App() {
                     className="hidden" 
                     onChange={handleImageUpload}
                   />
-                  <label htmlFor="cameraInput" className="cursor-pointer flex items-center gap-3 px-8 py-4 bg-white border border-stone-300 text-stone-900 font-medium text-lg rounded-full shadow-sm hover:bg-stone-50 transition-colors">
+                  <label htmlFor="cameraInput" className="cursor-pointer flex items-center justify-center gap-3 px-8 py-4 bg-white border border-stone-200 text-stone-900 font-medium text-lg rounded-full shadow-lg hover:shadow-xl hover:bg-stone-50 transition-all duration-300 transform hover:-translate-y-1">
                      <CameraIcon />
-                     Take Photo (0.5x Wide)
+                     Open Camera
                   </label>
+                  <div className="hidden sm:block absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs text-stone-400 font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                    Use 0.5x Wide Lens for best results
+                  </div>
                </div>
             </div>
             
@@ -154,7 +199,7 @@ function App() {
               accept="image/*" 
               onChange={handleImageUpload} 
             />
-            <p className="text-sm text-stone-400">Supported formats: JPG, PNG. Pro tip: Use your camera's 0.5x (Wide) lens.</p>
+            <p className="text-sm text-stone-400 mt-4">Drag & Drop supported • JPG, PNG • Best with Wide Angle</p>
           </div>
         ) : (
           /* Dashboard */
