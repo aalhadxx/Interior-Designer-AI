@@ -1,0 +1,7 @@
+{
+  "name": "Lumina Design AI",
+  "description": "An intelligent interior design assistant that analyzes your room using principles from top design literature, visualizes improvements, and virtually tidies your space.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
