@@ -1,0 +1,17 @@
+Write-Host "--- SYSTEM & MOTHERBOARD ---" -ForegroundColor Cyan
+Get-CimInstance Win32_ComputerSystem | Select-Object Manufacturer, Model, SystemType | Format-List
+Get-CimInstance Win32_BaseBoard | Select-Object Manufacturer, Product, Version | Format-List
+
+Write-Host "--- GPU & DISPLAY ---" -ForegroundColor Green
+Get-CimInstance Win32_VideoController | Select-Object Name, VideoProcessor, AdapterRAM, @{n="Resolution";e={"$($_.CurrentHorizontalResolution) x $($_.CurrentVerticalResolution)"}}, CurrentRefreshRate | Format-Table -AutoSize
+
+Write-Host "--- STORAGE HEALTH (SSDs) ---" -ForegroundColor Green
+Get-PhysicalDisk | Select-Object FriendlyName, MediaType, @{n="Size(GB)";e={[math]::Round($_.Size/1GB,2)}}, HealthStatus, OperationalStatus | Format-Table -AutoSize
+
+Write-Host "--- BATTERY HEALTH REPORT ---" -ForegroundColor Green
+# Fallback method for battery: generates a file you can open
+powercfg /batteryreport /output "$env:USERPROFILE\Desktop\battery_report.html"
+Write-Host "Battery Report generated on your Desktop (battery_report.html). Open it to see 'Cycle Count'." -ForegroundColor Yellow
+
+Write-Host "--- PRODUCT AGE (BIOS Date) ---" -ForegroundColor Cyan
+Get-CimInstance Win32_BIOS | Select-Object ReleaseDate, SMBIOSBIOSVersion | Format-List
